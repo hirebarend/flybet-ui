@@ -22,7 +22,7 @@ export default function FlightsPage() {
       {/* Hero */}
       <div className="py-8 text-center">
         <h1 className="text-3xl font-black tracking-tight">
-          Predict <span className="text-[#E6007E]">fly</span><span className="text-[#3CA2C8]">SAFE</span>
+          Predict <span className="text-[#E6007E]">Fly</span><span className="text-[#3CA2C8]">Safair</span>
           <br />
           flight outcomes.
         </h1>

@@ -102,7 +102,7 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
           <span className="font-mono font-medium text-[#F1F5F9]">
             {(pool?.stakerCount ?? 0).toLocaleString()}
           </span>
-          <span className="text-[#64748B]">{pool?.stakerCount === 1 ? 'staker' : 'stakers'}</span>
+          <span className="text-[#64748B]">{(pool?.stakerCount ?? 0) === 1 ? 'staker' : 'stakers'}</span>
         </span>
       </div>
     </Card>

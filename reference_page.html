@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlyBet — FlySafair Flight Predictions</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --bg-card: #16161c;
+    --bg-card-alt: #1c1c24;
+    --bg-surface: #1e1f28;
+    --border: #27283a;
+    --border-light: #35365a;
+    --text: #ecedf5;
+    --text-dim: #8889a8;
+    --text-muted: #52536e;
+    --brand: #e8303a;
+    --brand-glow: rgba(232,48,58,0.3);
+    --brand-dim: rgba(232,48,58,0.1);
+    --green: #2ee8a0;
+    --green-dim: rgba(46,232,160,0.1);
+    --green-glow: rgba(46,232,160,0.25);
+    --amber: #f0a830;
+    --amber-dim: rgba(240,168,48,0.12);
+    --blue: #5898ff;
+    --blue-dim: rgba(88,152,255,0.12);
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === AMBIENT === */
+  .glow-top {
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 500px;
+    background: radial-gradient(ellipse, var(--brand-glow) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* === NAV === */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(12,12,15,0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--text);
+    font-weight: 800; font-size: 19px;
+    letter-spacing: -0.5px;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--brand);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 0 20px var(--brand-glow);
+  }
+  .logo em { font-style: normal; color: var(--brand); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-wallet {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--green);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-wallet:hover { border-color: var(--green); box-shadow: 0 0 20px var(--green-dim); }
+  .wallet-pulse {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; box-shadow: 0 0 0 0 var(--green-glow); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
+  }
+  .nav-tabs {
+    display: flex; gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--text-dim); }
+  .nav-tab.active { color: var(--text); background: var(--bg-surface); }
+
+  /* === MAIN CONTAINER === */
+  .container {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 0 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* === LIVE BADGE === */
+  .live-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 0 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+    animation: pulse-red 1.5s infinite;
+  }
+  @keyframes pulse-red {
+    0%,100% { box-shadow: 0 0 0 0 var(--brand-glow); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+
+  /* === HERO === */
+  .hero {
+    text-align: center;
+    padding: 24px 0 28px;
+  }
+  .hero h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .hero h1 span { color: var(--brand); }
+  .hero-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    max-width: 380px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 20px;
+  }
+  .hstat-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .hstat-val.accent { color: var(--brand); }
+  .hstat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 3px;
+  }
+
+  /* === FILTER ROW === */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .filter-pill:hover { border-color: var(--border-light); color: var(--text); }
+  .filter-pill.active {
+    background: var(--brand-dim);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  /* === FLIGHT CARDS === */
+  .cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 100px;
+  }
+
+  .flight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .flight-card:hover {
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px 12px;
+  }
+  .card-flight-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-code {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .card-nickname {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .card-status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .status-live { background: var(--brand-dim); color: var(--brand); border: 1px solid rgba(232,48,58,0.3); }
+  .status-upcoming { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(88,152,255,0.2); }
+  .status-delayed { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(240,168,48,0.2); }
+  .status-ontime { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,232,160,0.2); }
+  .status-cancelled { background: rgba(232,48,58,0.15); color: #ff6b7a; border: 1px solid rgba(232,48,58,0.3); }
+
+  /* Route Visual */
+  .card-route {
+    padding: 4px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .route-point {
+    text-align: center;
+    min-width: 60px;
+  }
+  .route-iata {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .route-city {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+  .route-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .route-line {
+    flex: 1;
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+  }
+  .route-track {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+  }
+  .route-track::before,
+  .route-track::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    border: 2px solid var(--border-light);
+    background: var(--bg-card);
+  }
+  .route-track::before { left: -3px; }
+  .route-track::after { right: -3px; }
+  .route-plane {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--brand);
+    z-index: 2;
+    animation: flyPlane 4s ease-in-out infinite;
+  }
+  @keyframes flyPlane {
+    0% { left: 15%; }
+    50% { left: 75%; }
+    100% { left: 15%; }
+  }
+
+  /* Pool & Bettors */
+  .card-meta {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+  .meta-item {
+    flex: 1;
+    padding: 12px 18px;
+    border-right: 1px solid var(--border);
+  }
+  .meta-item:last-child { border-right: none; }
+  .meta-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .meta-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+    margin-top: 3px;
+  }
+
+  /* === EXPANDED CARD === */
+  .card-expand {
+    display: none;
+    padding: 0 18px 18px;
+    animation: expandIn 0.35s ease;
+  }
+  .card-expand.open { display: block; }
+  @keyframes expandIn {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 600px; }
+  }
+
+  /* Prediction Markets Grid */
+  .markets-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .market-block {
+    background: var(--bg-surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .market-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .market-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .market-title .icon {
+    font-size: 15px;
+  }
+  .market-pool {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* SLIDER PREDICTION */
+  .slider-container {
+    margin: 6px 0 12px;
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .predict-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--green), var(--amber), var(--brand));
+    outline: none;
+    cursor: pointer;
+  }
+  .predict-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg-card);
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    cursor: grab;
+    transition: transform 0.15s;
+  }
+  .predict-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+  .predict-slider::-moz-range-thumb {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg-card);
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    cursor: grab;
+  }
+  .slider-value {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 10px 0 4px;
+  }
+  .slider-value-label {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* YES/NO Quick Market */
+  .binary-market {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .binary-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .binary-btn .btn-side {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .binary-btn .btn-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .btn-yes {
+    border-color: rgba(46,232,160,0.25);
+    color: var(--green);
+  }
+  .btn-yes:hover {
+    background: var(--green-dim);
+    border-color: var(--green);
+    box-shadow: 0 0 24px var(--green-dim);
+    transform: translateY(-1px);
+  }
+  .btn-no {
+    border-color: rgba(232,48,58,0.25);
+    color: var(--brand);
+  }
+  .btn-no:hover {
+    background: var(--brand-dim);
+    border-color: var(--brand);
+    box-shadow: 0 0 24px var(--brand-dim);
+    transform: translateY(-1px);
+  }
+
+  /* Stake Row */
+  .stake-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .stake-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .stake-presets {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+  }
+  .stake-chip {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 400;
+  }
+  .stake-chip:hover { border-color: var(--border-light); color: var(--text); }
+  .stake-chip.selected {
+    background: var(--brand-dim);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+  .place-bet-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--brand);
+    color: white;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px var(--brand-glow);
+    white-space: nowrap;
+  }
+  .place-bet-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px var(--brand-glow);
+  }
+
+  /* Probability bar */
+  .prob-bar-container { margin: 10px 0; }
+  .prob-bar {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--bg-card);
+    overflow: hidden;
+    display: flex;
+  }
+  .prob-fill-yes {
+    height: 100%;
+    background: var(--green);
+    border-radius: 4px 0 0 4px;
+    transition: width 0.5s ease;
+  }
+  .prob-fill-no {
+    height: 100%;
+    background: var(--brand);
+    border-radius: 0 4px 4px 0;
+    transition: width 0.5s ease;
+  }
+  .prob-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  /* === TOAST NOTIFICATION === */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    padding: 14px 24px;
+    border-radius: var(--radius);
+    background: var(--green);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 8px 32px var(--green-glow);
+    z-index: 500;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+  .footer a { color: var(--brand); text-decoration: none; }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* === ANIMATIONS === */
+  .card-anim {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: cardFadeIn 0.5s ease forwards;
+  }
+  @keyframes cardFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-top"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#">
+      <div class="logo-mark">✈</div>
+      Fly<em>Bet</em>
+    </a>
+    <div class="nav-right">
+      <div class="nav-tabs">
+        <button class="nav-tab active">Flights</button>
+        <button class="nav-tab">Rank</button>
+      </div>
+      <div class="nav-wallet">
+        <div class="wallet-pulse"></div>
+        R 2,450
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="live-bar">
+    <div class="live-dot"></div>
+    <span style="font-weight:600; color: var(--brand); text-transform:uppercase; letter-spacing:1.5px; font-size:10px;">Live</span>
+    <span>·</span>
+    <span>Updated every 2 min</span>
+    <span>·</span>
+    <span>15 open markets</span>
+  </div>
+
+  <div class="hero">
+    <h1>Predict <span>FlySafair</span><br>flight outcomes.</h1>
+    <p class="hero-sub">Pick a flight. Predict the delay. Stake your R's. If you're right — or close enough — you win from the pool.</p>
+    <div class="hero-stats">
+      <div>
+        <div class="hstat-val accent">R 184k</div>
+        <div class="hstat-label">24h Pool</div>
+      </div>
+      <div>
+        <div class="hstat-val">1,247</div>
+        <div class="hstat-label">Predictors</div>
+      </div>
+      <div>
+        <div class="hstat-val">38</div>
+        <div class="hstat-label">Open</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-pill active" data-route="all">All Flights</button>
+    <button class="filter-pill" data-route="jnb-cpt">JNB → CPT</button>
+    <button class="filter-pill" data-route="cpt-jnb">CPT → JNB</button>
+    <button class="filter-pill" data-route="jnb-dur">JNB → DUR</button>
+    <button class="filter-pill" data-route="dur-jnb">DUR → JNB</button>
+    <button class="filter-pill" data-route="cpt-dur">CPT → DUR</button>
+    <button class="filter-pill" data-route="jnb-grj">JNB → GRJ</button>
+  </div>
+
+  <div class="cards-wrapper" id="cardsList"></div>
+
+  <div class="footer">
+    This is a satirical social experiment. All flights are real. The money is not.<br>
+    Built with ☕ and delayed departures. <a href="#">How it works</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">🎉 Prediction placed!</div>
+
+<script>
+const nicknames = [
+  'Springbok Express', 'Table Mountain Cruiser', 'Vaal River Runner', 'Protea Glider',
+  'Signal Hill Surfer', 'Drakensberg Dart', 'Karoo Comet', 'Sardine Run',
+  'Biltong Bomber', 'Rooibos Rocket', 'Shosholoza Shuttle', 'Madiba Mover',
+  'Bunny Chow Bullet', 'Braai Baron', 'Loadshedding Liftoff'
+];
+
+const flights = [
+  { code:'FA101', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'06:15', arr:'08:25', status:'boarding', ontimeP:82, delayP:14, cancelP:4, pool:12450, bettors:284, nickname: nicknames[0] },
+  { code:'FA103', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'07:30', arr:'09:40', status:'ontime', ontimeP:91, delayP:7, cancelP:2, pool:8320, bettors:195, nickname: nicknames[1] },
+  { code:'FA202', from:'CPT', fromC:'Cape Town', to:'JNB', toC:'Johannesburg', dep:'08:00', arr:'10:05', status:'ontime', ontimeP:76, delayP:19, cancelP:5, pool:15200, bettors:342, nickname: nicknames[2] },
+  { code:'FA305', from:'JNB', fromC:'Johannesburg', to:'DUR', toC:'Durban', dep:'09:10', arr:'10:20', status:'delayed', ontimeP:35, delayP:55, cancelP:10, pool:22100, bettors:508, nickname: nicknames[3] },
+  { code:'FA107', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'10:45', arr:'12:55', status:'ontime', ontimeP:88, delayP:9, cancelP:3, pool:6780, bettors:156, nickname: nicknames[4] },
+  { code:'FA410', from:'DUR', fromC:'Durban', to:'JNB', toC:'Johannesburg', dep:'11:20', arr:'12:30', status:'ontime', ontimeP:79, delayP:16, cancelP:5, pool:9340, bettors:213, nickname: nicknames[5] },
+  { code:'FA204', from:'CPT', fromC:'Cape Town', to:'JNB', toC:'Johannesburg', dep:'12:00', arr:'14:05', status:'delayed', ontimeP:42, delayP:48, cancelP:10, pool:18900, bettors:431, nickname: nicknames[6] },
+  { code:'FA503', from:'CPT', fromC:'Cape Town', to:'DUR', toC:'Durban', dep:'13:15', arr:'15:30', status:'cancelled', ontimeP:0, delayP:0, cancelP:100, pool:28400, bettors:647, nickname: nicknames[7] },
+  { code:'FA109', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'14:30', arr:'16:40', status:'upcoming', ontimeP:85, delayP:11, cancelP:4, pool:7650, bettors:178, nickname: nicknames[8] },
+  { code:'FA601', from:'JNB', fromC:'Johannesburg', to:'GRJ', toC:'George', dep:'15:00', arr:'17:05', status:'upcoming', ontimeP:73, delayP:21, cancelP:6, pool:5420, bettors:124, nickname: nicknames[9] },
+  { code:'FA307', from:'JNB', fromC:'Johannesburg', to:'DUR', toC:'Durban', dep:'16:15', arr:'17:25', status:'upcoming', ontimeP:90, delayP:7, cancelP:3, pool:4890, bettors:112, nickname: nicknames[10] },
+  { code:'FA206', from:'CPT', fromC:'Cape Town', to:'JNB', toC:'Johannesburg', dep:'17:30', arr:'19:35', status:'upcoming', ontimeP:68, delayP:24, cancelP:8, pool:11200, bettors:256, nickname: nicknames[11] },
+  { code:'FA111', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'18:45', arr:'20:55', status:'upcoming', ontimeP:28, delayP:62, cancelP:10, pool:19800, bettors:452, nickname: nicknames[12] },
+  { code:'FA412', from:'DUR', fromC:'Durban', to:'JNB', toC:'Johannesburg', dep:'19:30', arr:'20:40', status:'upcoming', ontimeP:81, delayP:14, cancelP:5, pool:6100, bettors:139, nickname: nicknames[13] },
+  { code:'FA113', from:'JNB', fromC:'Johannesburg', to:'CPT', toC:'Cape Town', dep:'21:00', arr:'23:10', status:'upcoming', ontimeP:86, delayP:10, cancelP:4, pool:8900, bettors:203, nickname: nicknames[14] },
+];
+
+function statusTag(s) {
+  const map = {
+    boarding: '<span class="card-status status-live">Boarding</span>',
+    ontime: '<span class="card-status status-ontime">On Time</span>',
+    delayed: '<span class="card-status status-delayed">Delayed</span>',
+    cancelled: '<span class="card-status status-cancelled">Cancelled</span>',
+    upcoming: '<span class="card-status status-upcoming">Upcoming</span>',
+  };
+  return map[s] || '';
+}
+
+function routeKey(f) { return `${f.from.toLowerCase()}-${f.to.toLowerCase()}`; }
+
+let selectedStakes = {};
+
+function renderCards(routeFilter = 'all') {
+  const wrap = document.getElementById('cardsList');
+  const filtered = flights.filter(f => routeFilter === 'all' || routeKey(f) === routeFilter);
+
+  wrap.innerHTML = filtered.map((f, i) => `
+    <div class="flight-card card-anim" style="animation-delay: ${i * 0.06}s" onclick="toggleExpand('exp-${f.code}')">
+      <div class="card-header">
+        <div class="card-flight-info">
+          <span class="card-code">${f.code}</span>
+          <span class="card-nickname">${f.nickname}</span>
+        </div>
+        ${statusTag(f.status)}
+      </div>
+
+      <div class="card-route">
+        <div class="route-point">
+          <div class="route-iata">${f.from}</div>
+          <div class="route-city">${f.fromC}</div>
+          <div class="route-time">${f.dep}</div>
+        </div>
+        <div class="route-line">
+          <div class="route-track"></div>
+          <div class="route-plane">✈</div>
+        </div>
+        <div class="route-point">
+          <div class="route-iata">${f.to}</div>
+          <div class="route-city">${f.toC}</div>
+          <div class="route-time">${f.arr}</div>
+        </div>
+      </div>
+
+      <div class="card-meta">
+        <div class="meta-item">
+          <div class="meta-label">Pool</div>
+          <div class="meta-val">R ${f.pool.toLocaleString()}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Predictors</div>
+          <div class="meta-val">${f.bettors}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">On-Time %</div>
+          <div class="meta-val" style="color: ${f.ontimeP >= 70 ? 'var(--green)' : f.ontimeP >= 40 ? 'var(--amber)' : 'var(--brand)'}">${f.ontimeP}%</div>
+        </div>
+      </div>
+
+      <div class="card-expand" id="exp-${f.code}" onclick="event.stopPropagation()">
+        <div class="markets-grid">
+          <!-- DELAY SLIDER -->
+          ${f.status !== 'cancelled' ? `
+          <div class="market-block">
+            <div class="market-title-row">
+              <div class="market-title"><span class="icon">⏱</span> Predict the Delay</div>
+              <div class="market-pool">${f.bettors} predictions</div>
+            </div>
+            <div class="slider-value" id="sv-${f.code}">0 min</div>
+            <div class="slider-value-label">Predicted arrival delay</div>
+            <div class="slider-container">
+              <div class="slider-labels">
+                <span>On time</span>
+                <span>15 min</span>
+                <span>30 min</span>
+                <span>60 min</span>
+                <span>90 min</span>
+              </div>
+              <input type="range" class="predict-slider" min="0" max="90" value="0"
+                oninput="updateSlider('${f.code}', this.value)">
+            </div>
+            <div class="stake-row">
+              <div class="stake-label">Stake</div>
+              <div class="stake-presets">
+                <button class="stake-chip" onclick="selectStake('${f.code}', 25, this)">R25</button>
+                <button class="stake-chip" onclick="selectStake('${f.code}', 50, this)">R50</button>
+                <button class="stake-chip selected" onclick="selectStake('${f.code}', 100, this)">R100</button>
+                <button class="stake-chip" onclick="selectStake('${f.code}', 250, this)">R250</button>
+              </div>
+              <button class="place-bet-btn" onclick="placeBet('${f.code}')">Place Bet</button>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- ON-TIME BINARY -->
+          <div class="market-block">
+            <div class="market-title-row">
+              <div class="market-title"><span class="icon">🟢</span> On-Time Departure?</div>
+              <div class="market-pool">Pool R ${Math.floor(f.pool * 0.4).toLocaleString()}</div>
+            </div>
+            <div class="prob-bar-container">
+              <div class="prob-bar">
+                <div class="prob-fill-yes" style="width: ${f.ontimeP}%"></div>
+                <div class="prob-fill-no" style="width: ${100 - f.ontimeP}%"></div>
+              </div>
+              <div class="prob-labels">
+                <span style="color: var(--green)">Yes ${f.ontimeP}%</span>
+                <span style="color: var(--brand)">No ${100 - f.ontimeP}%</span>
+              </div>
+            </div>
+            <div class="binary-market">
+              <button class="binary-btn btn-yes" onclick="placeBinaryBet('${f.code}', 'On-Time', 'Yes')">
+                <div class="btn-side">Yes</div>
+                <div class="btn-pct">${f.ontimeP}¢</div>
+              </button>
+              <button class="binary-btn btn-no" onclick="placeBinaryBet('${f.code}', 'On-Time', 'No')">
+                <div class="btn-side">No</div>
+                <div class="btn-pct">${100 - f.ontimeP}¢</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- CANCELLATION BINARY -->
+          <div class="market-block">
+            <div class="market-title-row">
+              <div class="market-title"><span class="icon">🔴</span> Will it be cancelled?</div>
+              <div class="market-pool">Pool R ${Math.floor(f.pool * 0.2).toLocaleString()}</div>
+            </div>
+            <div class="prob-bar-container">
+              <div class="prob-bar">
+                <div class="prob-fill-yes" style="width: ${f.cancelP}%; background: var(--brand);"></div>
+                <div class="prob-fill-no" style="width: ${100 - f.cancelP}%; background: var(--green);"></div>
+              </div>
+              <div class="prob-labels">
+                <span style="color: var(--brand)">Yes ${f.cancelP}%</span>
+                <span style="color: var(--green)">No ${100 - f.cancelP}%</span>
+              </div>
+            </div>
+            <div class="binary-market">
+              <button class="binary-btn btn-no" onclick="placeBinaryBet('${f.code}', 'Cancel', 'Yes')" style="border-color: rgba(232,48,58,0.25); color: var(--brand);">
+                <div class="btn-side">Yes</div>
+                <div class="btn-pct">${f.cancelP}¢</div>
+              </button>
+              <button class="binary-btn btn-yes" onclick="placeBinaryBet('${f.code}', 'Cancel', 'No')">
+                <div class="btn-side">No</div>
+                <div class="btn-pct">${100 - f.cancelP}¢</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleExpand(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // Close all others
+  document.querySelectorAll('.card-expand.open').forEach(e => {
+    if (e.id !== id) e.classList.remove('open');
+  });
+  el.classList.toggle('open');
+}
+
+function updateSlider(code, val) {
+  const el = document.getElementById(`sv-${code}`);
+  if (el) el.textContent = `${val} min`;
+}
+
+function selectStake(code, amount, btn) {
+  selectedStakes[code] = amount;
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.stake-chip').forEach(c => c.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function placeBet(code) {
+  const stake = selectedStakes[code] || 100;
+  showToast(`🎉 R${stake} staked on ${code} delay prediction!`);
+}
+
+function placeBinaryBet(code, market, side) {
+  showToast(`🎯 ${side} on ${code} ${market} — prediction placed!`);
+}
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    renderCards(pill.dataset.route);
+  });
+});
+
+renderCards();
+</script>
+</body>
+</html>

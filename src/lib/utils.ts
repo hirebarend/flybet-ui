@@ -42,9 +42,6 @@ export function getBasePool(flightId: string): {
 } {
   const rng = seededRandom(hashString(flightId));
   const baseStakers = 5 + Math.floor(rng() * 11); // 5..15
-  let basePool = 0;
-  for (let i = 0; i < baseStakers; i++) {
-    basePool += 50 + Math.floor(rng() * 51); // 50..100
-  }
+  const basePool = baseStakers * 50;
   return { basePool, baseStakers };
 }

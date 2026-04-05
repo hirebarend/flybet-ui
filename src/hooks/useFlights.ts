@@ -40,7 +40,8 @@ export function useFlights() {
         }
       }
 
-      // Both groups are already sorted by departure.scheduled asc from the query
+      // Both groups preserve the ascending departure order from the Firestore query
+      // since we iterate data in order and push() maintains insertion order
       setFlights([...open, ...closed]);
       setLoading(false);
     });

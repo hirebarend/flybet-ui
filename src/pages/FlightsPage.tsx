@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Lock } from 'lucide-react';
 import { useFlights } from '@/hooks/useFlights';
 import { canPlaceBet } from '@/lib/bets';
@@ -7,7 +8,10 @@ export default function FlightsPage() {
   const { flights, loading } = useFlights();
 
   // Find the index where closed flights begin
-  const closedIndex = flights.findIndex((f) => !canPlaceBet(f.departure.scheduled));
+  const closedIndex = useMemo(
+    () => flights.findIndex((f) => !canPlaceBet(f.departure.scheduled)),
+    [flights]
+  );
   const hasOpen = closedIndex !== 0;
   const hasClosed = closedIndex !== -1;
 

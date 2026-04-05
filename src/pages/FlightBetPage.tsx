@@ -108,7 +108,10 @@ export default function FlightBetPage() {
             <div className="h-[2px] w-full bg-[#1E2D3D]" />
             <div className="absolute left-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
             <div className="absolute right-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
-            <Plane className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 text-[#E6007E]" />
+            <Plane
+              className="absolute left-1/2 top-1/2 h-4 w-4 text-[#E6007E]"
+              style={{ transform: 'translate(-50%, -50%) rotate(-45deg)' }}
+            />
           </div>
 
           <div className="text-center">

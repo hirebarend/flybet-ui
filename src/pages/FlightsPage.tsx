@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { Lock } from 'lucide-react';
 import { useFlights } from '@/hooks/useFlights';
+import { useFlightPools } from '@/hooks/useFlightPools';
 import { canPlaceBet } from '@/lib/bets';
 import FlightCard from '@/components/FlightCard';
 
 export default function FlightsPage() {
   const { flights, loading } = useFlights();
+  const pools = useFlightPools();
 
   // Find the index where closed flights begin
   const closedIndex = useMemo(
@@ -20,7 +22,7 @@ export default function FlightsPage() {
       {/* Hero */}
       <div className="py-8 text-center">
         <h1 className="text-3xl font-black tracking-tight">
-          Predict <span className="text-[#E6007E]">FlySafair</span>
+          Predict <span className="text-[#E6007E]">fly</span><span className="text-[#3CA2C8]">SAFE</span>
           <br />
           flight outcomes.
         </h1>
@@ -56,7 +58,7 @@ export default function FlightsPage() {
                     <div className="h-px flex-1 bg-[#1E2D3D]" />
                   </div>
                 )}
-                <FlightCard flight={flight} />
+                <FlightCard flight={flight} pool={pools.get(flight.id)} />
               </div>
             ))}
           </>

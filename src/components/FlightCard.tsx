@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Plane } from 'lucide-react';
+import { Plane, Users, Coins } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
 import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
+import type { FlightPool } from '@/hooks/useFlightPools';
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('en-ZA', {
@@ -24,7 +25,12 @@ function StatusBadge({ flight }: { flight: Flight }) {
   );
 }
 
-export default function FlightCard({ flight }: { flight: Flight }) {
+interface FlightCardProps {
+  flight: Flight;
+  pool?: FlightPool;
+}
+
+export default function FlightCard({ flight, pool }: FlightCardProps) {
   const navigate = useNavigate();
   const depCode = flight.departure.airport.code;
   const arrCode = flight.arrival.airport.code;
@@ -62,7 +68,10 @@ export default function FlightCard({ flight }: { flight: Flight }) {
             <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
             <div className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
           </div>
-          <Plane className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-[#E6007E]" />
+          <Plane
+            className="absolute left-1/2 top-1/2 h-3.5 w-3.5 text-[#E6007E]"
+            style={{ transform: 'translate(-50%, -50%) rotate(-45deg)' }}
+          />
         </div>
 
         <div className="text-center">
@@ -76,6 +85,25 @@ export default function FlightCard({ flight }: { flight: Flight }) {
             {formatTime(flight.arrival.scheduled)}
           </div>
         </div>
+      </div>
+
+      {/* Pool stats */}
+      <div className="flex items-center justify-center gap-4 border-t border-[#1E2D3D] px-4 py-2">
+        <span className="flex items-center gap-1 text-xs text-[#94A3B8]">
+          <Coins className="h-3 w-3 text-[#E6007E]" />
+          <span className="font-mono font-medium text-[#F1F5F9]">
+            R {(pool?.totalPool ?? 0).toLocaleString()}
+          </span>
+          <span className="text-[#64748B]">pooled</span>
+        </span>
+        <span className="text-[#1E2D3D]">·</span>
+        <span className="flex items-center gap-1 text-xs text-[#94A3B8]">
+          <Users className="h-3 w-3 text-[#3CA2C8]" />
+          <span className="font-mono font-medium text-[#F1F5F9]">
+            {(pool?.stakerCount ?? 0).toLocaleString()}
+          </span>
+          <span className="text-[#64748B]">{pool?.stakerCount === 1 ? 'staker' : 'stakers'}</span>
+        </span>
       </div>
     </Card>
   );

@@ -40,7 +40,13 @@ export interface UserProfile {
   createdAt: Date;
 }
 
-export type BetOutcome = 'onTimeDeparture' | 'onTimeArrival' | 'cancelled';
+export type BetOutcome =
+  | 'onTimeDeparture'
+  | 'delayedDeparture'
+  | 'onTimeArrival'
+  | 'delayedArrival'
+  | 'cancelled'
+  | 'notCancelled';
 
 export interface Bet {
   id: string; // Firestore document ID

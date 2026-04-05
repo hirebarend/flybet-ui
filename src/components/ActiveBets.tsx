@@ -5,14 +5,20 @@ import type { Bet, BetOutcome } from '@/types';
 
 const OUTCOME_LABELS: Record<BetOutcome, string> = {
   onTimeDeparture: 'On-Time Departure',
+  delayedDeparture: 'Delayed Departure',
   onTimeArrival: 'On-Time Arrival',
+  delayedArrival: 'Delayed Arrival',
   cancelled: 'Cancelled',
+  notCancelled: 'Not Cancelled',
 };
 
 const OUTCOME_COLORS: Record<BetOutcome, string> = {
   onTimeDeparture: '#22C55E',
+  delayedDeparture: '#F59E0B',
   onTimeArrival: '#3CA2C8',
+  delayedArrival: '#F59E0B',
   cancelled: '#EF4444',
+  notCancelled: '#22C55E',
 };
 
 interface ActiveBetsProps {

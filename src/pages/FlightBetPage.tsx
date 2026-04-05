@@ -197,9 +197,13 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="onTimeDeparture"
-            label="On-Time Departure"
+            sides={[
+              { outcome: 'onTimeDeparture', label: 'On Time' },
+              { outcome: 'delayedDeparture', label: 'Delayed' },
+            ]}
+            categoryLabel="Departure"
             icon={<PlaneTakeoff className="h-4 w-4" />}
+            accentColor="#22C55E"
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -207,9 +211,13 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="onTimeArrival"
-            label="On-Time Arrival"
+            sides={[
+              { outcome: 'onTimeArrival', label: 'On Time' },
+              { outcome: 'delayedArrival', label: 'Delayed' },
+            ]}
+            categoryLabel="Arrival"
             icon={<PlaneLanding className="h-4 w-4" />}
+            accentColor="#3CA2C8"
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -217,9 +225,13 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="cancelled"
-            label="Cancelled"
+            sides={[
+              { outcome: 'notCancelled', label: 'Not Cancelled' },
+              { outcome: 'cancelled', label: 'Cancelled' },
+            ]}
+            categoryLabel="Cancellation"
             icon={<Ban className="h-4 w-4" />}
+            accentColor="#EF4444"
             onBetPlaced={() => {}}
           />
         </div>

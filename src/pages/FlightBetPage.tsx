@@ -5,6 +5,7 @@ import { db } from '@/lib/firebase';
 import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserBets } from '@/hooks/useUserBets';
+import { normaliseFlight } from '@/hooks/useFlights';
 import { canPlaceBet } from '@/lib/bets';
 import AuthGate from '@/components/AuthGate';
 import BetForm from '@/components/BetForm';
@@ -42,7 +43,7 @@ export default function FlightBetPage() {
 
     const unsub = onSnapshot(doc(db, 'flights', id), (snap) => {
       if (snap.exists()) {
-        setFlight({ id: snap.id, ...snap.data() } as Flight);
+        setFlight({ id: snap.id, ...normaliseFlight(snap.data()) } as Flight);
       }
       setLoading(false);
     });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { canPlaceBet } from '@/lib/bets';
 import type { Flight } from '@/types';
 
 export function useFlights() {
@@ -18,15 +19,30 @@ export function useFlights() {
         id: doc.id,
         ...doc.data(),
       })) as Flight[];
-      
-      const now = new Date();
-      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const filtered = data.filter((f) => {
-        const dep = new Date(f.departure.scheduled);
-        return dep >= now && dep <= in24h;
-      });
-      
-      setFlights(filtered.length > 0 ? filtered : data);
+
+      const now = Date.now();
+      const sixHoursMs = 6 * 60 * 60 * 1000;
+
+      // Split flights into open (betting available) and closed (within 6h of departure or up to 6h after)
+      const open: Flight[] = [];
+      const closed: Flight[] = [];
+
+      for (const f of data) {
+        const depTime = new Date(f.departure.scheduled).getTime();
+
+        // Exclude flights more than 6 hours past departure
+        if (depTime < now - sixHoursMs) continue;
+
+        if (canPlaceBet(f.departure.scheduled)) {
+          open.push(f);
+        } else {
+          closed.push(f);
+        }
+      }
+
+      // Both groups preserve the ascending departure order from the Firestore query
+      // since we iterate data in order and push() maintains insertion order
+      setFlights([...open, ...closed]);
       setLoading(false);
     });
 

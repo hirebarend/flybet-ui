@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { ArrowLeft, Plane, PlaneTakeoff, PlaneLanding, Ban } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
 import { useAuth } from '@/hooks/useAuth';
@@ -80,7 +81,7 @@ export default function FlightBetPage() {
         onClick={() => navigate('/')}
         className="mb-4 flex items-center gap-1 text-sm text-[#64748B] hover:text-[#94A3B8]"
       >
-        ← Back to flights
+        <ArrowLeft className="h-4 w-4" /> Back to flights
       </button>
 
       {/* Flight header */}
@@ -106,9 +107,7 @@ export default function FlightBetPage() {
             <div className="h-[2px] w-full bg-[#1E2D3D]" />
             <div className="absolute left-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
             <div className="absolute right-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm text-[#E6007E]">
-              ✈
-            </span>
+            <Plane className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 text-[#E6007E]" />
           </div>
 
           <div className="text-center">
@@ -199,7 +198,7 @@ export default function FlightBetPage() {
             balance={userProfile?.balance ?? 0}
             outcome="onTimeDeparture"
             label="On-Time Departure"
-            icon="🛫"
+            icon={<PlaneTakeoff className="h-4 w-4" />}
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -209,7 +208,7 @@ export default function FlightBetPage() {
             balance={userProfile?.balance ?? 0}
             outcome="onTimeArrival"
             label="On-Time Arrival"
-            icon="🛬"
+            icon={<PlaneLanding className="h-4 w-4" />}
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -219,7 +218,7 @@ export default function FlightBetPage() {
             balance={userProfile?.balance ?? 0}
             outcome="cancelled"
             label="Cancelled"
-            icon="❌"
+            icon={<Ban className="h-4 w-4" />}
             onBetPlaced={() => {}}
           />
         </div>

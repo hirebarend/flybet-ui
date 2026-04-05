@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { STAKE_OPTIONS, type BetOutcome, type StakeAmount } from '@/types';
 import { placeBet, canPlaceBet } from '@/lib/bets';
 
@@ -9,7 +9,7 @@ interface BetFormProps {
   balance: number;
   outcome: BetOutcome;
   label: string;
-  icon: string;
+  icon: ReactNode;
   onBetPlaced: () => void;
 }
 
@@ -52,7 +52,7 @@ export default function BetForm({
   return (
     <div className="rounded-xl border border-[#1E2D3D] bg-[#1A2332] p-4">
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-base">{icon}</span>
+        <span className="text-[#F1F5F9]">{icon}</span>
         <span className="text-sm font-semibold text-[#F1F5F9]">{label}</span>
       </div>
 

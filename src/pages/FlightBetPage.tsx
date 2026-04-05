@@ -197,9 +197,12 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="onTimeDeparture"
-            label="On-Time Departure"
+            category="Departure"
             icon="🛫"
+            options={[
+              { outcome: 'onTimeDeparture', label: 'On Time' },
+              { outcome: 'delayedDeparture', label: 'Delayed' },
+            ]}
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -207,9 +210,12 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="onTimeArrival"
-            label="On-Time Arrival"
+            category="Arrival"
             icon="🛬"
+            options={[
+              { outcome: 'onTimeArrival', label: 'On Time' },
+              { outcome: 'delayedArrival', label: 'Delayed' },
+            ]}
             onBetPlaced={() => {}}
           />
           <BetForm
@@ -217,9 +223,12 @@ export default function FlightBetPage() {
             flightId={flight.id}
             scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
-            outcome="cancelled"
-            label="Cancelled"
+            category="Cancellation"
             icon="❌"
+            options={[
+              { outcome: 'cancelled', label: 'Will Cancel' },
+              { outcome: 'notCancelled', label: 'Won\'t Cancel' },
+            ]}
             onBetPlaced={() => {}}
           />
         </div>

@@ -13,11 +13,15 @@ export type ComputedStatus =
  * Derives flight status from scheduled/actual times rather than
  * relying on the Firestore status field which may be stale.
  *
+ * Important: actual departure/arrival times may be populated with
+ * future estimates before the flight departs. A time is only treated
+ * as evidence of departure/arrival when it is in the past.
+ *
  * Logic:
- * - If actualDeparture and actualArrival exist → Landed (check if delayed)
- * - If actualDeparture exists but no actualArrival → In Flight (check if departure was delayed)
- * - If scheduledDeparture is in the past but no actualDeparture → Delayed
- * - If scheduledDeparture is within 30 min → Boarding
+ * - If actualDeparture is in the past and actualArrival is in the past → Landed (check if delayed)
+ * - If actualDeparture is in the past but arrival hasn't occurred → In Flight (check if departure was delayed)
+ * - If best-known departure time is in the past but flight hasn't departed → Delayed
+ * - If best-known departure time is within 30 min → Boarding
  * - Otherwise → Scheduled
  */
 export function computeFlightStatus(flight: Flight): ComputedStatus {
@@ -27,27 +31,32 @@ export function computeFlightStatus(flight: Flight): ComputedStatus {
   const actualDep = flight.departure.actual ? new Date(flight.departure.actual) : null;
   const actualArr = flight.arrival.actual ? new Date(flight.arrival.actual) : null;
 
+  // Only treat actual times as evidence of departure/arrival if they are in the past
+  const hasDeparted = actualDep !== null && actualDep.getTime() <= now.getTime();
+  const hasArrived = actualArr !== null && actualArr.getTime() <= now.getTime();
+
   // Flight has departed
-  if (actualDep) {
+  if (hasDeparted) {
     // Flight has also arrived
-    if (actualArr) {
-      const arrivalDiffMs = actualArr.getTime() - scheduledArr.getTime();
+    if (hasArrived) {
+      const arrivalDiffMs = actualArr!.getTime() - scheduledArr.getTime();
       // Delayed if arrived more than 15 min late
       if (arrivalDiffMs > 15 * 60 * 1000) return 'Delayed';
       return 'Landed';
     }
 
     // Departed but not yet arrived
-    const depDiffMs = actualDep.getTime() - scheduledDep.getTime();
+    const depDiffMs = actualDep!.getTime() - scheduledDep.getTime();
     // If departed more than 15 min late, mark as delayed
     if (depDiffMs > 15 * 60 * 1000) return 'Delayed';
     return 'In Flight';
   }
 
-  // Flight hasn't departed yet
-  const msUntilDep = scheduledDep.getTime() - now.getTime();
+  // Flight hasn't departed yet — use best available departure time
+  const bestDep = actualDep || scheduledDep;
+  const msUntilDep = bestDep.getTime() - now.getTime();
 
-  // Scheduled departure has passed with no actual departure → delayed
+  // Departure time has passed but flight hasn't departed → delayed
   if (msUntilDep < 0) return 'Delayed';
 
   // Within 30 minutes of departure → boarding

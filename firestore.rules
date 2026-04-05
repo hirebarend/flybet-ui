@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Flights collection: read-only for everyone (even unauthenticated for the main page)
+    match /flights/{flightId} {
+      allow read: if true;
+      allow write: if false; // Only the background service writes via Admin SDK
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone authenticated can read all users (needed for leaderboard)
+      allow read: if request.auth != null;
+      
+      // Users can only create their own document (first sign-in)
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.balance == 1000;
+      
+      // Users cannot directly update their profile (balance changes happen via transactions in bets)
+      // Actually, the client does update balance during bet placement via transactions,
+      // so we need to allow updates to own document
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == resource.data.email; // Can't change email
+      
+      allow delete: if false;
+    }
+    
+    // Bets collection
+    match /bets/{betId} {
+      // Users can read their own bets
+      allow read: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+      
+      // Users can create bets for themselves
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.amount in [50, 100, 250, 500]
+        && request.resource.data.outcome in ['onTimeDeparture', 'onTimeArrival', 'cancelled'];
+      
+      // Users can delete (cancel) their own bets
+      allow delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+      
+      // No direct updates to bets
+      allow update: if false;
+    }
+  }
+}

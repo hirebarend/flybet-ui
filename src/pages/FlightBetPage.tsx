@@ -88,8 +88,23 @@ export default function FlightBetPage() {
       {/* Flight header */}
       <div className="mb-6 rounded-xl border border-[#1E2D3D] bg-[#111827] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-mono text-lg font-bold">{getFlightNumber(flight)}</span>
-          <span className="text-xs text-[#64748B]">{formatDate(flight.departure.scheduled)}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-lg font-bold">{getFlightNumber(flight)}</span>
+            {(() => {
+              const status = computeFlightStatus(flight);
+              return (
+                <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}>
+                  {status}
+                </span>
+              );
+            })()}
+          </div>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs text-[#64748B]">{formatDate(flight.departure.scheduled)}</span>
+            {flight.aircraft.model && (
+              <span className="text-[10px] text-[#64748B]">{flight.aircraft.model}</span>
+            )}
+          </div>
         </div>
 
         {/* Route visualization */}
@@ -110,7 +125,7 @@ export default function FlightBetPage() {
             <div className="absolute right-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
             <Plane
               className="absolute left-1/2 top-1/2 h-4 w-4 text-[#E6007E]"
-              style={{ transform: 'translate(-50%, -50%) rotate(-45deg)' }}
+              style={{ transform: 'translate(-50%, -50%) rotate(45deg)' }}
             />
           </div>
 
@@ -124,43 +139,6 @@ export default function FlightBetPage() {
             </div>
           </div>
         </div>
-
-        {/* Status */}
-        <div className="mt-4 flex items-center justify-between border-t border-[#1E2D3D] pt-3">
-          <span className="text-xs text-[#64748B]">Status</span>
-          {(() => {
-            const status = computeFlightStatus(flight);
-            return (
-              <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}>
-                {status}
-              </span>
-            );
-          })()}
-        </div>
-        {flight.departure.actual && (
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-[#64748B]">Actual Departure</span>
-            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.departure.actual)}</span>
-          </div>
-        )}
-        {flight.arrival.actual && (
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-[#64748B]">Actual Arrival</span>
-            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.arrival.actual)}</span>
-          </div>
-        )}
-        {flight.departure.gate && (
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-[#64748B]">Gate</span>
-            <span className="font-mono text-xs text-[#94A3B8]">{flight.departure.gate}</span>
-          </div>
-        )}
-        {flight.aircraft.model && (
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-[#64748B]">Aircraft</span>
-            <span className="text-xs text-[#94A3B8]">{flight.aircraft.model}</span>
-          </div>
-        )}
       </div>
 
       {/* Betting section */}

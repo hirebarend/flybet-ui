@@ -78,7 +78,7 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="py-10 text-center text-xs text-[#64748B]">
+      <footer className="mx-auto max-w-[540px] px-4 py-10 text-center text-xs text-[#64748B]">
         This is a satirical social experiment. All flights are real. The money is not.
       </footer>
 

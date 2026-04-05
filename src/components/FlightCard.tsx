@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
 import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
+import { getBasePool } from '@/lib/utils';
 import type { FlightPool } from '@/hooks/useFlightPools';
 
 function formatTime(dateStr: string) {
@@ -34,6 +35,9 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
   const navigate = useNavigate();
   const depCode = flight.departure.airport.code;
   const arrCode = flight.arrival.airport.code;
+  const { basePool, baseStakers } = getBasePool(flight.id);
+  const totalPool = basePool + (pool?.totalPool ?? 0);
+  const totalStakers = baseStakers + (pool?.stakerCount ?? 0);
 
   return (
     <Card
@@ -70,7 +74,7 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
           </div>
           <Plane
             className="absolute left-1/2 top-1/2 h-3.5 w-3.5 text-[#E6007E]"
-            style={{ transform: 'translate(-50%, -50%) rotate(-45deg)' }}
+            style={{ transform: 'translate(-50%, -50%) rotate(45deg)' }}
           />
         </div>
 
@@ -92,7 +96,7 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
         <span className="flex items-center gap-1 text-xs text-[#94A3B8]">
           <Coins className="h-3 w-3 text-[#E6007E]" />
           <span className="font-mono font-medium text-[#F1F5F9]">
-            R {(pool?.totalPool ?? 0).toLocaleString()}
+            R {totalPool.toLocaleString()}
           </span>
           <span className="text-[#64748B]">pooled</span>
         </span>
@@ -100,9 +104,9 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
         <span className="flex items-center gap-1 text-xs text-[#94A3B8]">
           <Users className="h-3 w-3 text-[#3CA2C8]" />
           <span className="font-mono font-medium text-[#F1F5F9]">
-            {(pool?.stakerCount ?? 0).toLocaleString()}
+            {totalStakers.toLocaleString()}
           </span>
-          <span className="text-[#64748B]">{(pool?.stakerCount ?? 0) === 1 ? 'staker' : 'stakers'}</span>
+          <span className="text-[#64748B]">{totalStakers === 1 ? 'staker' : 'stakers'}</span>
         </span>
       </div>
     </Card>

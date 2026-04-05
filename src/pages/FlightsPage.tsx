@@ -1,8 +1,15 @@
+import { Lock } from 'lucide-react';
 import { useFlights } from '@/hooks/useFlights';
+import { canPlaceBet } from '@/lib/bets';
 import FlightCard from '@/components/FlightCard';
 
 export default function FlightsPage() {
   const { flights, loading } = useFlights();
+
+  // Find the index where closed flights begin
+  const closedIndex = flights.findIndex((f) => !canPlaceBet(f.departure.scheduled));
+  const hasOpen = closedIndex !== 0;
+  const hasClosed = closedIndex !== -1;
 
   return (
     <div>
@@ -32,9 +39,23 @@ export default function FlightsPage() {
             No flights available right now.
           </div>
         ) : (
-          flights.map((flight) => (
-            <FlightCard key={flight.id} flight={flight} />
-          ))
+          <>
+            {flights.map((flight, index) => (
+              <div key={flight.id}>
+                {/* Separator before the closed flights section */}
+                {hasClosed && hasOpen && index === closedIndex && (
+                  <div className="mb-3 flex items-center gap-2 pt-2">
+                    <div className="h-px flex-1 bg-[#1E2D3D]" />
+                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                      <Lock className="h-3 w-3" /> Betting Closed
+                    </span>
+                    <div className="h-px flex-1 bg-[#1E2D3D]" />
+                  </div>
+                )}
+                <FlightCard flight={flight} />
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>

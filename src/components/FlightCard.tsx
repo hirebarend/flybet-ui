@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Plane } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
@@ -61,9 +62,7 @@ export default function FlightCard({ flight }: { flight: Flight }) {
             <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
             <div className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full border-2 border-[#2A3F55] bg-[#111827]" />
           </div>
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-[#E6007E]">
-            ✈
-          </span>
+          <Plane className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-[#E6007E]" />
         </div>
 
         <div className="text-center">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
+import { Plane } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGate from '@/components/AuthGate';
 
@@ -14,7 +15,7 @@ export default function Layout() {
         <div className="mx-auto flex max-w-[540px] items-center justify-between px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E6007E] text-sm shadow-[0_0_20px_rgba(230,0,126,0.3)]">
-              ✈
+              <Plane className="h-4 w-4 text-white" />
             </div>
             <span>
               <span className="text-[#E6007E]">Fly</span>

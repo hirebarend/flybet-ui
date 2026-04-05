@@ -1,5 +1,12 @@
+import { Trophy, Medal } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useAuth } from '@/hooks/useAuth';
+
+const RANK_COLORS: Record<number, string> = {
+  1: '#FFD700',
+  2: '#C0C0C0',
+  3: '#CD7F32',
+};
 
 export default function LeaderboardPage() {
   const { users, loading } = useLeaderboard();
@@ -7,8 +14,8 @@ export default function LeaderboardPage() {
 
   return (
     <div className="py-6">
-      <h1 className="mb-6 text-center text-2xl font-black tracking-tight">
-        🏆 Leaderboard
+      <h1 className="mb-6 flex items-center justify-center gap-2 text-center text-2xl font-black tracking-tight">
+        <Trophy className="h-6 w-6 text-[#FFD700]" /> Leaderboard
       </h1>
 
       {loading ? (
@@ -29,7 +36,9 @@ export default function LeaderboardPage() {
           {users.map((u, index) => {
             const isCurrentUser = user?.uid === u.uid;
             const rank = index + 1;
-            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+            const rankEmoji = rank <= 3 ? (
+              <Medal className="h-4 w-4" style={{ color: RANK_COLORS[rank] }} />
+            ) : null;
 
             return (
               <div

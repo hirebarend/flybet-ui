@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { USE_MOCKS, MOCK_FLIGHTS } from '@/lib/mock';
+import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserBets } from '@/hooks/useUserBets';
 import { canPlaceBet } from '@/lib/bets';
 import AuthGate from '@/components/AuthGate';
 import BetForm from '@/components/BetForm';
 import ActiveBets from '@/components/ActiveBets';
-import { AIRPORT_NAMES } from '@/types';
+import { AIRPORT_NAMES, getFlightNumber } from '@/types';
 import type { Flight } from '@/types';
 
 function formatTime(dateStr: string) {
@@ -31,7 +31,7 @@ function formatDate(dateStr: string) {
 export default function FlightBetPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, userProfile, signInWithEmail } = useAuth();
+  const { user, userProfile, signIn, signUp } = useAuth();
   const { bets, loading: betsLoading } = useUserBets(user?.uid, id);
   const [flight, setFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,13 +39,6 @@ export default function FlightBetPage() {
 
   useEffect(() => {
     if (!id) return;
-
-    if (USE_MOCKS) {
-      const found = MOCK_FLIGHTS.find((f) => f.id === id) ?? null;
-      setFlight(found);
-      setLoading(false);
-      return;
-    }
 
     const unsub = onSnapshot(doc(db, 'flights', id), (snap) => {
       if (snap.exists()) {
@@ -75,7 +68,10 @@ export default function FlightBetPage() {
     );
   }
 
-  const bettingOpen = canPlaceBet(flight.scheduledDeparture);
+  const bettingOpen = canPlaceBet(flight.departure.scheduled);
+
+  const depCode = flight.departure.airport.code;
+  const arrCode = flight.arrival.airport.code;
 
   return (
     <div className="py-6">
@@ -90,19 +86,19 @@ export default function FlightBetPage() {
       {/* Flight header */}
       <div className="mb-6 rounded-xl border border-[#1E2D3D] bg-[#111827] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-mono text-lg font-bold">{flight.flightNumber}</span>
-          <span className="text-xs text-[#64748B]">{formatDate(flight.scheduledDeparture)}</span>
+          <span className="font-mono text-lg font-bold">{getFlightNumber(flight)}</span>
+          <span className="text-xs text-[#64748B]">{formatDate(flight.departure.scheduled)}</span>
         </div>
 
         {/* Route visualization */}
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <div className="font-mono text-2xl font-bold">{flight.departureAirport}</div>
+            <div className="font-mono text-2xl font-bold">{depCode}</div>
             <div className="text-[10px] text-[#64748B]">
-              {AIRPORT_NAMES[flight.departureAirport] || flight.departureAirport}
+              {AIRPORT_NAMES[depCode] || depCode}
             </div>
             <div className="mt-1 font-mono text-sm text-[#94A3B8]">
-              {formatTime(flight.scheduledDeparture)}
+              {formatTime(flight.departure.scheduled)}
             </div>
           </div>
 
@@ -116,12 +112,12 @@ export default function FlightBetPage() {
           </div>
 
           <div className="text-center">
-            <div className="font-mono text-2xl font-bold">{flight.arrivalAirport}</div>
+            <div className="font-mono text-2xl font-bold">{arrCode}</div>
             <div className="text-[10px] text-[#64748B]">
-              {AIRPORT_NAMES[flight.arrivalAirport] || flight.arrivalAirport}
+              {AIRPORT_NAMES[arrCode] || arrCode}
             </div>
             <div className="mt-1 font-mono text-sm text-[#94A3B8]">
-              {formatTime(flight.scheduledArrival)}
+              {formatTime(flight.arrival.scheduled)}
             </div>
           </div>
         </div>
@@ -129,18 +125,37 @@ export default function FlightBetPage() {
         {/* Status */}
         <div className="mt-4 flex items-center justify-between border-t border-[#1E2D3D] pt-3">
           <span className="text-xs text-[#64748B]">Status</span>
-          <span className="text-xs font-medium text-[#94A3B8]">{flight.status}</span>
+          {(() => {
+            const status = computeFlightStatus(flight);
+            return (
+              <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}>
+                {status}
+              </span>
+            );
+          })()}
         </div>
-        {flight.actualDeparture && (
+        {flight.departure.actual && (
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-[#64748B]">Actual Departure</span>
-            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.actualDeparture)}</span>
+            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.departure.actual)}</span>
           </div>
         )}
-        {flight.actualArrival && (
+        {flight.arrival.actual && (
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-[#64748B]">Actual Arrival</span>
-            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.actualArrival)}</span>
+            <span className="font-mono text-xs text-[#94A3B8]">{formatTime(flight.arrival.actual)}</span>
+          </div>
+        )}
+        {flight.departure.gate && (
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-[#64748B]">Gate</span>
+            <span className="font-mono text-xs text-[#94A3B8]">{flight.departure.gate}</span>
+          </div>
+        )}
+        {flight.aircraft.model && (
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-[#64748B]">Aircraft</span>
+            <span className="text-xs text-[#94A3B8]">{flight.aircraft.model}</span>
           </div>
         )}
       </div>
@@ -163,7 +178,7 @@ export default function FlightBetPage() {
         <div className="space-y-3">
           {!bettingOpen && (
             <div className="rounded-lg bg-[#F59E0B]/10 px-3 py-2 text-center text-xs text-[#F59E0B]">
-              Betting is {new Date(flight.scheduledDeparture) > new Date() ? 'not yet open (opens 6 hours before departure)' : 'closed for this flight'}
+              Betting is {new Date(flight.departure.scheduled) > new Date() ? 'closed (less than 6 hours before departure)' : 'closed for this flight'}
             </div>
           )}
 
@@ -172,7 +187,7 @@ export default function FlightBetPage() {
             <ActiveBets
               bets={bets}
               userId={user.uid}
-              scheduledDeparture={flight.scheduledDeparture}
+              scheduledDeparture={flight.departure.scheduled}
             />
           )}
 
@@ -180,7 +195,7 @@ export default function FlightBetPage() {
           <BetForm
             userId={user.uid}
             flightId={flight.id}
-            scheduledDeparture={flight.scheduledDeparture}
+            scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
             outcome="onTimeDeparture"
             label="On-Time Departure"
@@ -190,7 +205,7 @@ export default function FlightBetPage() {
           <BetForm
             userId={user.uid}
             flightId={flight.id}
-            scheduledDeparture={flight.scheduledDeparture}
+            scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
             outcome="onTimeArrival"
             label="On-Time Arrival"
@@ -200,7 +215,7 @@ export default function FlightBetPage() {
           <BetForm
             userId={user.uid}
             flightId={flight.id}
-            scheduledDeparture={flight.scheduledDeparture}
+            scheduledDeparture={flight.departure.scheduled}
             balance={userProfile?.balance ?? 0}
             outcome="cancelled"
             label="Cancelled"
@@ -213,7 +228,8 @@ export default function FlightBetPage() {
       {/* Auth modal */}
       {showAuth && (
         <AuthGate
-          onSubmitEmail={signInWithEmail}
+          onSignIn={signIn}
+          onSignUp={signUp}
           onClose={() => setShowAuth(false)}
         />
       )}

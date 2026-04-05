@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { STAKE_OPTIONS, type BetOutcome, type StakeAmount } from '@/types';
 import { placeBet, canPlaceBet } from '@/lib/bets';
 
@@ -30,26 +29,23 @@ export default function BetForm({
   icon,
   onBetPlaced,
 }: BetFormProps) {
-  const [selectedAmount, setSelectedAmount] = useState<StakeAmount | null>(null);
-  const [placing, setPlacing] = useState(false);
+  const [placing, setPlacing] = useState<StakeAmount | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const bettingOpen = canPlaceBet(scheduledDeparture);
   const color = OUTCOME_COLORS[outcome];
 
-  const handlePlaceBet = async () => {
-    if (!selectedAmount) return;
-    setPlacing(true);
+  const handleChipClick = async (amount: StakeAmount) => {
+    setPlacing(amount);
     setError(null);
 
     try {
-      await placeBet(userId, flightId, outcome, selectedAmount);
-      setSelectedAmount(null);
+      await placeBet(userId, flightId, outcome, amount);
       onBetPlaced();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place bet');
     } finally {
-      setPlacing(false);
+      setPlacing(null);
     }
   };
 
@@ -70,39 +66,28 @@ export default function BetForm({
             {STAKE_OPTIONS.map((amount) => (
               <button
                 key={amount}
-                onClick={() => setSelectedAmount(amount)}
-                disabled={balance < amount}
+                onClick={() => handleChipClick(amount)}
+                disabled={balance < amount || placing !== null}
                 className={`flex-1 rounded-lg border px-2 py-1.5 font-mono text-xs transition ${
-                  selectedAmount === amount
-                    ? ''
+                  placing === amount
+                    ? 'animate-pulse'
                     : balance < amount
                     ? 'border-[#1E2D3D] text-[#64748B]/50 cursor-not-allowed'
                     : 'border-[#1E2D3D] text-[#94A3B8] hover:border-[#2A3F55] hover:text-[#F1F5F9]'
                 }`}
                 style={
-                  selectedAmount === amount
+                  placing === amount
                     ? { borderColor: color, backgroundColor: `${color}15`, color }
                     : undefined
                 }
               >
-                R{amount}
+                {placing === amount ? '...' : `R${amount}`}
               </button>
             ))}
           </div>
 
           {error && (
             <p className="mt-2 text-xs text-[#EF4444]">{error}</p>
-          )}
-
-          {selectedAmount && (
-            <Button
-              onClick={handlePlaceBet}
-              disabled={placing}
-              className="mt-3 w-full text-white"
-              style={{ backgroundColor: color }}
-            >
-              {placing ? 'Placing...' : `Bet R${selectedAmount} on ${label}`}
-            </Button>
           )}
         </>
       )}

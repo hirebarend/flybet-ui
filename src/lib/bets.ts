@@ -1,6 +1,5 @@
 import { collection, doc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { USE_MOCKS, mockPlaceBet, mockCancelBet } from '@/lib/mock';
 import type { BetOutcome, StakeAmount } from '@/types';
 
 export async function placeBet(
@@ -9,10 +8,6 @@ export async function placeBet(
   outcome: BetOutcome,
   amount: StakeAmount
 ) {
-  if (USE_MOCKS) {
-    return mockPlaceBet(flightId, outcome, amount);
-  }
-
   return runTransaction(db, async (transaction) => {
     const userRef = doc(db, 'users', userId);
     const userSnap = await transaction.get(userRef);
@@ -44,11 +39,6 @@ export async function placeBet(
 }
 
 export async function cancelBet(betId: string, userId: string, amount: number) {
-  if (USE_MOCKS) {
-    mockCancelBet(betId);
-    return;
-  }
-
   return runTransaction(db, async (transaction) => {
     const userRef = doc(db, 'users', userId);
     const userSnap = await transaction.get(userRef);
@@ -69,12 +59,10 @@ export async function cancelBet(betId: string, userId: string, amount: number) {
 }
 
 export function canPlaceBet(scheduledDeparture: string): boolean {
-  // const depTime = new Date(scheduledDeparture).getTime();
-  // const now = Date.now();
-  // const sixHoursMs = 6 * 60 * 60 * 1000;
+  const depTime = new Date(scheduledDeparture).getTime();
+  const now = Date.now();
+  const sixHoursMs = 6 * 60 * 60 * 1000;
   
-  // // Can only bet within 6 hours before departure and before departure
-  // return depTime > now && (depTime - now) <= sixHoursMs;
-
-  return true;
+  // Bets can be placed any time as long as departure is more than 6 hours away
+  return (depTime - now) > sixHoursMs;
 }

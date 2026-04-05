@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthGate from '@/components/AuthGate';
 
 export default function Layout() {
-  const { user, userProfile, signInWithEmail, signOut } = useAuth();
+  const { user, userProfile, signIn, signUp, signOut } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
 
   return (
@@ -84,7 +84,8 @@ export default function Layout() {
       {/* Auth modal */}
       {showAuth && (
         <AuthGate
-          onSubmitEmail={signInWithEmail}
+          onSignIn={signIn}
+          onSignUp={signUp}
           onClose={() => setShowAuth(false)}
         />
       )}

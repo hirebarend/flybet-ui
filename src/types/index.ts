@@ -1,13 +1,35 @@
 export interface Flight {
-  id: string; // Firestore document ID
-  flightNumber: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  scheduledDeparture: string;
-  scheduledArrival: string;
-  actualDeparture: string | null;
-  actualArrival: string | null;
+  id: string;
+  flight: {
+    iataCode: string;
+    number: string;
+  };
+  airline: {
+    name: string;
+  };
+  departure: {
+    airport: { code: string };
+    scheduled: string;
+    actual: string | null;
+    terminal: string | null;
+    gate: string | null;
+  };
+  arrival: {
+    airport: { code: string };
+    scheduled: string;
+    actual: string | null;
+    terminal: string | null;
+  };
   status: string;
+  aircraft: {
+    model: string | null;
+    registration: string | null;
+  };
+}
+
+/** Helper to get display flight number like "FA 416" */
+export function getFlightNumber(flight: Flight): string {
+  return `${flight.flight.iataCode} ${flight.flight.number}`;
 }
 
 export interface UserProfile {

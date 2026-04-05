@@ -3,7 +3,6 @@ import Layout from '@/components/Layout';
 import FlightsPage from '@/pages/FlightsPage';
 import FlightBetPage from '@/pages/FlightBetPage';
 import LeaderboardPage from '@/pages/LeaderboardPage';
-import AuthCallbackPage from '@/pages/AuthCallbackPage';
 
 export default function App() {
   return (
@@ -14,7 +13,6 @@ export default function App() {
           <Route path="/flight/:id" element={<FlightBetPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
         </Route>
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { USE_MOCKS, getMockBets, subscribeMockState } from '@/lib/mock';
 import type { Bet } from '@/types';
 
 export function useUserBets(userId: string | undefined, flightId: string | undefined) {
@@ -13,15 +12,6 @@ export function useUserBets(userId: string | undefined, flightId: string | undef
       setBets([]);
       setLoading(false);
       return;
-    }
-
-    if (USE_MOCKS) {
-      setBets(getMockBets(flightId));
-      setLoading(false);
-      const unsub = subscribeMockState(() => {
-        setBets(getMockBets(flightId));
-      });
-      return unsub;
     }
 
     const q = query(

@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
-import { AIRPORT_NAMES } from '@/types';
+import { AIRPORT_NAMES, getFlightNumber } from '@/types';
+import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('en-ZA', {
@@ -11,20 +12,11 @@ function formatTime(dateStr: string) {
   });
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Expected: 'bg-[#3CA2C8]/10 text-[#3CA2C8] border-[#3CA2C8]/20',
-    Delayed: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
-    Cancelled: 'bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/20',
-    Landed: 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20',
-    Boarding: 'bg-[#E6007E]/10 text-[#E6007E] border-[#E6007E]/20',
-  };
-
+function StatusBadge({ flight }: { flight: Flight }) {
+  const status = computeFlightStatus(flight);
   return (
     <span
-      className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-        styles[status] || styles.Expected
-      }`}
+      className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}
     >
       {status}
     </span>
@@ -33,6 +25,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function FlightCard({ flight }: { flight: Flight }) {
   const navigate = useNavigate();
+  const depCode = flight.departure.airport.code;
+  const arrCode = flight.arrival.airport.code;
 
   return (
     <Card
@@ -42,22 +36,22 @@ export default function FlightCard({ flight }: { flight: Flight }) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <span className="font-mono text-sm font-bold text-[#F1F5F9]">
-          {flight.flightNumber}
+          {getFlightNumber(flight)}
         </span>
-        <StatusBadge status={flight.status} />
+        <StatusBadge flight={flight} />
       </div>
 
       {/* Route */}
       <div className="flex items-center gap-3 px-4 pb-3">
         <div className="text-center">
           <div className="font-mono text-xl font-bold text-[#F1F5F9]">
-            {flight.departureAirport}
+            {depCode}
           </div>
           <div className="text-[10px] text-[#64748B]">
-            {AIRPORT_NAMES[flight.departureAirport] || flight.departureAirport}
+            {AIRPORT_NAMES[depCode] || depCode}
           </div>
           <div className="mt-1 font-mono text-xs text-[#94A3B8]">
-            {formatTime(flight.scheduledDeparture)}
+            {formatTime(flight.departure.scheduled)}
           </div>
         </div>
 
@@ -74,13 +68,13 @@ export default function FlightCard({ flight }: { flight: Flight }) {
 
         <div className="text-center">
           <div className="font-mono text-xl font-bold text-[#F1F5F9]">
-            {flight.arrivalAirport}
+            {arrCode}
           </div>
           <div className="text-[10px] text-[#64748B]">
-            {AIRPORT_NAMES[flight.arrivalAirport] || flight.arrivalAirport}
+            {AIRPORT_NAMES[arrCode] || arrCode}
           </div>
           <div className="mt-1 font-mono text-xs text-[#94A3B8]">
-            {formatTime(flight.scheduledArrival)}
+            {formatTime(flight.arrival.scheduled)}
           </div>
         </div>
       </div>

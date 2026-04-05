@@ -12,7 +12,7 @@
       "collectionGroup": "flights",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "scheduledDeparture", "order": "ASCENDING" }
+        { "fieldPath": "departure.scheduled", "order": "ASCENDING" }
       ]
     },
     {

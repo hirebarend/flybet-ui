@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { USE_MOCKS, getMockLeaderboard, subscribeMockState } from '@/lib/mock';
 import type { UserProfile } from '@/types';
 
 export function useLeaderboard() {
@@ -9,15 +8,6 @@ export function useLeaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (USE_MOCKS) {
-      setUsers(getMockLeaderboard());
-      setLoading(false);
-      const unsub = subscribeMockState(() => {
-        setUsers(getMockLeaderboard());
-      });
-      return unsub;
-    }
-
     const q = query(
       collection(db, 'users'),
       orderBy('balance', 'desc'),

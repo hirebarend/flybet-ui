@@ -14,7 +14,7 @@ export type ComputedStatus =
  * relying on the Firestore status field which may be stale.
  *
  * Logic:
- * - If actualArrival exists → Landed (check if delayed)
+ * - If actualDeparture and actualArrival exist → Landed (check if delayed)
  * - If actualDeparture exists but no actualArrival → In Flight (check if departure was delayed)
  * - If scheduledDeparture is in the past but no actualDeparture → Delayed
  * - If scheduledDeparture is within 30 min → Boarding
@@ -27,16 +27,17 @@ export function computeFlightStatus(flight: Flight): ComputedStatus {
   const actualDep = flight.departure.actual ? new Date(flight.departure.actual) : null;
   const actualArr = flight.arrival.actual ? new Date(flight.arrival.actual) : null;
 
-  // Flight has arrived
-  if (actualArr) {
-    const arrivalDiffMs = actualArr.getTime() - scheduledArr.getTime();
-    // Delayed if arrived more than 15 min late
-    if (arrivalDiffMs > 15 * 60 * 1000) return 'Delayed';
-    return 'Landed';
-  }
-
-  // Flight has departed but not arrived
+  // Flight has departed
   if (actualDep) {
+    // Flight has also arrived
+    if (actualArr) {
+      const arrivalDiffMs = actualArr.getTime() - scheduledArr.getTime();
+      // Delayed if arrived more than 15 min late
+      if (arrivalDiffMs > 15 * 60 * 1000) return 'Delayed';
+      return 'Landed';
+    }
+
+    // Departed but not yet arrived
     const depDiffMs = actualDep.getTime() - scheduledDep.getTime();
     // If departed more than 15 min late, mark as delayed
     if (depDiffMs > 15 * 60 * 1000) return 'Delayed';

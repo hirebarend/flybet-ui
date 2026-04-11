@@ -3,7 +3,7 @@ import { Plane, Users, Coins } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
-import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
+import { computeBettingStatus, getBettingStatusStyle } from '@/lib/flight-status';
 import { getBasePool } from '@/lib/utils';
 import type { FlightPool } from '@/hooks/useFlightPools';
 
@@ -15,17 +15,6 @@ function formatTime(dateStr: string) {
   });
 }
 
-function StatusBadge({ flight }: { flight: Flight }) {
-  const status = computeFlightStatus(flight);
-  return (
-    <span
-      className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}
-    >
-      {status}
-    </span>
-  );
-}
-
 interface FlightCardProps {
   flight: Flight;
   pool?: FlightPool;
@@ -35,6 +24,7 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
   const navigate = useNavigate();
   const depCode = flight.departure.airport.code;
   const arrCode = flight.arrival.airport.code;
+  const bettingStatus = computeBettingStatus(flight);
   const { basePool, baseStakers } = getBasePool(flight.id);
   const totalPool = basePool + (pool?.totalPool ?? 0);
   const totalStakers = baseStakers + (pool?.stakerCount ?? 0);
@@ -49,7 +39,11 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
         <span className="font-mono text-sm font-bold text-[#F1F5F9]">
           {getFlightNumber(flight)}
         </span>
-        <StatusBadge flight={flight} />
+        <span
+          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getBettingStatusStyle(bettingStatus)}`}
+        >
+          {bettingStatus}
+        </span>
       </div>
 
       {/* Route */}

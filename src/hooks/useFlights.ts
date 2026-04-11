@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { canPlaceBet } from '@/lib/bets';
 import type { Flight } from '@/types';
 
 /** Convert a Firestore Timestamp (or any value with a toDate method) to an ISO string. */
@@ -14,20 +13,36 @@ function toISOString(value: unknown): string {
 
 /** Normalise Firestore Timestamp fields on a raw flight document to ISO strings. */
 export function normaliseFlight(raw: Record<string, unknown>): Omit<Flight, 'id'> {
-  const d = raw as Record<string, Record<string, unknown>>;
+  const d = raw as Record<string, Record<string, unknown> | string | boolean>;
+  const departure = (d.departure ?? {}) as Record<string, unknown>;
+  const arrival = (d.arrival ?? {}) as Record<string, unknown>;
+  const airline = (d.airline ?? {}) as Record<string, unknown>;
+  const aircraft = (d.aircraft ?? {}) as Record<string, unknown>;
+
   return {
-    ...raw,
+    flight: (d.flight as string) ?? '',
+    airline: {
+      iata: (airline.iata as string) ?? '',
+    },
     departure: {
-      ...(d.departure as Flight['departure']),
-      scheduled: toISOString(d.departure?.scheduled),
-      actual: d.departure?.actual ? toISOString(d.departure.actual) : null,
+      airport: {
+        code: ((departure.airport as Record<string, unknown> | undefined)?.code as string) ?? '',
+      },
+      scheduled: toISOString(departure.scheduled),
+      actual: departure.actual ? toISOString(departure.actual) : null,
     },
     arrival: {
-      ...(d.arrival as Flight['arrival']),
-      scheduled: toISOString(d.arrival?.scheduled),
-      actual: d.arrival?.actual ? toISOString(d.arrival.actual) : null,
+      airport: {
+        code: ((arrival.airport as Record<string, unknown> | undefined)?.code as string) ?? '',
+      },
+      scheduled: toISOString(arrival.scheduled),
+      actual: arrival.actual ? toISOString(arrival.actual) : null,
     },
-  } as Omit<Flight, 'id'>;
+    aircraft: {
+      model: (aircraft.model as string | null | undefined) ?? null,
+    },
+    cancelled: Boolean(d.cancelled),
+  };
 }
 
 export function useFlights() {
@@ -49,26 +64,12 @@ export function useFlights() {
       const now = Date.now();
       const sixHoursMs = 6 * 60 * 60 * 1000;
 
-      // Split flights into open (betting available) and closed (within 6h of departure or up to 6h after)
-      const open: Flight[] = [];
-      const closed: Flight[] = [];
-
-      for (const f of data) {
-        const depTime = new Date(f.departure.scheduled).getTime();
-
-        // Exclude flights more than 6 hours past departure
-        if (depTime < now - sixHoursMs) continue;
-
-        if (canPlaceBet(f.departure.scheduled)) {
-          open.push(f);
-        } else {
-          closed.push(f);
-        }
-      }
-
-      // Both groups preserve the ascending departure order from the Firestore query
-      // since we iterate data in order and push() maintains insertion order
-      setFlights([...open, ...closed]);
+      setFlights(
+        data.filter((flight) => {
+          const depTime = new Date(flight.departure.scheduled).getTime();
+          return depTime >= now - sixHoursMs;
+        })
+      );
       setLoading(false);
     });
 

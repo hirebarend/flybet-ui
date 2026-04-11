@@ -5,7 +5,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "flightId", "order": "ASCENDING" }
+        { "fieldPath": "flight_id", "order": "ASCENDING" }
       ]
     },
     {

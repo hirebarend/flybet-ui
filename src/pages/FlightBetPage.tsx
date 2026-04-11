@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { ArrowLeft, Plane, PlaneTakeoff, PlaneLanding, Ban } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { computeFlightStatus, getStatusStyle } from '@/lib/flight-status';
+import { computeBettingStatus, getBettingStatusStyle } from '@/lib/flight-status';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserBets } from '@/hooks/useUserBets';
 import { normaliseFlight } from '@/hooks/useFlights';
-import { canPlaceBet } from '@/lib/bets';
 import AuthGate from '@/components/AuthGate';
 import BetForm from '@/components/BetForm';
 import ActiveBets from '@/components/ActiveBets';
@@ -70,10 +69,10 @@ export default function FlightBetPage() {
     );
   }
 
-  const bettingOpen = canPlaceBet(flight.departure.scheduled);
-
   const depCode = flight.departure.airport.code;
   const arrCode = flight.arrival.airport.code;
+  const bettingStatus = computeBettingStatus(flight);
+  const canBetNow = bettingStatus === 'Open';
 
   return (
     <div className="py-6">
@@ -90,14 +89,9 @@ export default function FlightBetPage() {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-mono text-lg font-bold">{getFlightNumber(flight)}</span>
-            {(() => {
-              const status = computeFlightStatus(flight);
-              return (
-                <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(status)}`}>
-                  {status}
-                </span>
-              );
-            })()}
+            <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getBettingStatusStyle(bettingStatus)}`}>
+              {bettingStatus}
+            </span>
           </div>
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-xs text-[#64748B]">{formatDate(flight.departure.scheduled)}</span>
@@ -144,22 +138,36 @@ export default function FlightBetPage() {
       {/* Betting section */}
       {!user ? (
         <div className="rounded-xl border border-[#1E2D3D] bg-[#111827] p-6 text-center">
-          <p className="mb-3 text-sm text-[#94A3B8]">Sign in to place bets on this flight</p>
-          <button
-            onClick={() => {
-              window.localStorage.setItem('redirectAfterSignIn', `/flight/${flight.id}`);
-              setShowAuth(true);
-            }}
-            className="rounded-lg bg-[#E6007E] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#E6007E]/90"
-          >
-            Sign In to Bet
-          </button>
+          {canBetNow ? (
+            <>
+              <p className="mb-3 text-sm text-[#94A3B8]">Sign in to place bets on this flight</p>
+              <button
+                onClick={() => {
+                  window.localStorage.setItem('redirectAfterSignIn', `/flight/${flight.id}`);
+                  setShowAuth(true);
+                }}
+                className="rounded-lg bg-[#E6007E] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#E6007E]/90"
+              >
+                Sign In to Bet
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-[#94A3B8]">
+              Betting is {bettingStatus.toLowerCase()} for this flight.
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
-          {!bettingOpen && (
+          {bettingStatus === 'Closed' && (
             <div className="rounded-lg bg-[#F59E0B]/10 px-3 py-2 text-center text-xs text-[#F59E0B]">
               Betting is {new Date(flight.departure.scheduled) > new Date() ? 'closed (less than 6 hours before departure)' : 'closed for this flight'}
+            </div>
+          )}
+
+          {bettingStatus === 'Settled' && (
+            <div className="rounded-lg bg-[#3CA2C8]/10 px-3 py-2 text-center text-xs text-[#3CA2C8]">
+              Betting is settled for this flight.
             </div>
           )}
 
@@ -173,48 +181,52 @@ export default function FlightBetPage() {
           )}
 
           {/* Bet forms */}
-          <BetForm
-            userId={user.uid}
-            flightId={flight.id}
-            scheduledDeparture={flight.departure.scheduled}
-            balance={userProfile?.balance ?? 0}
-            sides={[
-              { outcome: 'onTimeDeparture', label: 'On Time' },
-              { outcome: 'delayedDeparture', label: 'Delayed' },
-            ]}
-            categoryLabel="Departure"
-            icon={<PlaneTakeoff className="h-4 w-4" />}
-            accentColor="#22C55E"
-            onBetPlaced={() => {}}
-          />
-          <BetForm
-            userId={user.uid}
-            flightId={flight.id}
-            scheduledDeparture={flight.departure.scheduled}
-            balance={userProfile?.balance ?? 0}
-            sides={[
-              { outcome: 'onTimeArrival', label: 'On Time' },
-              { outcome: 'delayedArrival', label: 'Delayed' },
-            ]}
-            categoryLabel="Arrival"
-            icon={<PlaneLanding className="h-4 w-4" />}
-            accentColor="#3CA2C8"
-            onBetPlaced={() => {}}
-          />
-          <BetForm
-            userId={user.uid}
-            flightId={flight.id}
-            scheduledDeparture={flight.departure.scheduled}
-            balance={userProfile?.balance ?? 0}
-            sides={[
-              { outcome: 'notCancelled', label: 'Not Cancelled' },
-              { outcome: 'cancelled', label: 'Cancelled' },
-            ]}
-            categoryLabel="Cancellation"
-            icon={<Ban className="h-4 w-4" />}
-            accentColor="#EF4444"
-            onBetPlaced={() => {}}
-          />
+          {canBetNow && (
+            <>
+              <BetForm
+                userId={user.uid}
+                flightId={flight.id}
+                scheduledDeparture={flight.departure.scheduled}
+                balance={userProfile?.balance ?? 0}
+                sides={[
+                  { outcome: 'onTimeDeparture', label: 'On Time' },
+                  { outcome: 'delayedDeparture', label: 'Delayed' },
+                ]}
+                categoryLabel="Departure"
+                icon={<PlaneTakeoff className="h-4 w-4" />}
+                accentColor="#22C55E"
+                onBetPlaced={() => {}}
+              />
+              <BetForm
+                userId={user.uid}
+                flightId={flight.id}
+                scheduledDeparture={flight.departure.scheduled}
+                balance={userProfile?.balance ?? 0}
+                sides={[
+                  { outcome: 'onTimeArrival', label: 'On Time' },
+                  { outcome: 'delayedArrival', label: 'Delayed' },
+                ]}
+                categoryLabel="Arrival"
+                icon={<PlaneLanding className="h-4 w-4" />}
+                accentColor="#3CA2C8"
+                onBetPlaced={() => {}}
+              />
+              <BetForm
+                userId={user.uid}
+                flightId={flight.id}
+                scheduledDeparture={flight.departure.scheduled}
+                balance={userProfile?.balance ?? 0}
+                sides={[
+                  { outcome: 'notCancelled', label: 'Not Cancelled' },
+                  { outcome: 'cancelled', label: 'Cancelled' },
+                ]}
+                categoryLabel="Cancellation"
+                icon={<Ban className="h-4 w-4" />}
+                accentColor="#EF4444"
+                onBetPlaced={() => {}}
+              />
+            </>
+          )}
         </div>
       )}
 

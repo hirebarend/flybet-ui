@@ -1,35 +1,28 @@
 export interface Flight {
   id: string;
-  flight: {
-    iataCode: string;
-    number: string;
-  };
+  flight: string;
   airline: {
-    name: string;
+    iata: string;
   };
   departure: {
     airport: { code: string };
     scheduled: string;
     actual: string | null;
-    terminal: string | null;
-    gate: string | null;
   };
   arrival: {
     airport: { code: string };
     scheduled: string;
     actual: string | null;
-    terminal: string | null;
   };
-  status: string;
   aircraft: {
     model: string | null;
-    registration: string | null;
   };
+  cancelled: boolean;
 }
 
 /** Helper to get display flight number like "FA 416" */
 export function getFlightNumber(flight: Flight): string {
-  return `${flight.flight.iataCode} ${flight.flight.number}`;
+  return `${flight.airline.iata} ${flight.flight}`;
 }
 
 export interface UserProfile {
@@ -51,10 +44,11 @@ export type BetOutcome =
 export interface Bet {
   id: string; // Firestore document ID
   userId: string;
-  flightId: string;
+  flight_id: string;
   outcome: BetOutcome;
   amount: number;
-  placedAt: Date;
+  settled: boolean;
+  payout: number;
 }
 
 export const STAKE_OPTIONS = [50, 100, 250, 500] as const;

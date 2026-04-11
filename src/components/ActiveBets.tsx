@@ -37,7 +37,7 @@ export default function ActiveBets({ bets, userId, scheduledDeparture }: ActiveB
   const handleCancel = async (bet: Bet) => {
     setCancellingId(bet.id);
     try {
-      await cancelBet(bet.id, userId, bet.amount);
+      await cancelBet(bet, userId);
     } catch (err) {
       console.error('Failed to cancel bet:', err);
     } finally {
@@ -53,23 +53,38 @@ export default function ActiveBets({ bets, userId, scheduledDeparture }: ActiveB
       <div className="flex flex-col gap-2">
         {bets.map((bet) => {
           const color = OUTCOME_COLORS[bet.outcome];
+          const showCancel = canCancel && !bet.settled;
           return (
             <div
               key={bet.id}
               className="flex items-center justify-between rounded-lg border border-[#1E2D3D] bg-[#1A2332] px-3 py-2"
             >
               <div>
-                <span
-                  className="text-xs font-semibold"
-                  style={{ color }}
-                >
-                  {OUTCOME_LABELS[bet.outcome]}
-                </span>
-                <span className="ml-2 font-mono text-xs text-[#F1F5F9]">
-                  R{bet.amount}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color }}
+                  >
+                    {OUTCOME_LABELS[bet.outcome]}
+                  </span>
+                  <span className="font-mono text-xs text-[#F1F5F9]">
+                    R{bet.amount}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      bet.settled
+                        ? 'bg-[#22C55E]/10 text-[#22C55E]'
+                        : 'bg-[#64748B]/10 text-[#94A3B8]'
+                    }`}
+                  >
+                    {bet.settled ? 'Settled' : 'Open'}
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-[#94A3B8]">
+                  {bet.settled ? `Payout R${bet.payout}` : 'Awaiting settlement'}
+                </div>
               </div>
-              {canCancel && (
+              {showCancel && (
                 <Button
                   variant="ghost"
                   size="sm"

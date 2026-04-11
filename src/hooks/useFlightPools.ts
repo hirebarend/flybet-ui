@@ -16,7 +16,7 @@ export function useFlightPools() {
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
-        const flightId = data.flightId as string;
+        const flightId = data.flight_id as string;
         const amount = (data.amount as number) ?? 0;
         const userId = data.userId as string;
 

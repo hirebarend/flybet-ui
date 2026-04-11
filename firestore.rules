@@ -40,8 +40,18 @@ service cloud.firestore {
       // Users can create bets for themselves
       allow create: if request.auth != null 
         && request.resource.data.userId == request.auth.uid
+        && request.resource.data.flight_id is string
         && request.resource.data.amount in [50, 100, 250, 500]
-        && request.resource.data.outcome in ['onTimeDeparture', 'onTimeArrival', 'cancelled'];
+        && request.resource.data.outcome in [
+          'onTimeDeparture',
+          'delayedDeparture',
+          'onTimeArrival',
+          'delayedArrival',
+          'cancelled',
+          'notCancelled'
+        ]
+        && request.resource.data.settled == false
+        && request.resource.data.payout == 0;
       
       // Users can delete (cancel) their own bets
       allow delete: if request.auth != null 

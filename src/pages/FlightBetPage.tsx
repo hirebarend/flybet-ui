@@ -4,6 +4,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { ArrowLeft, Plane, PlaneTakeoff, PlaneLanding, Ban } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { computeBettingStatus, getBettingStatusStyle } from '@/lib/flight-status';
+import { getFlightLegTimeDisplay } from '@/lib/flight-times';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserBets } from '@/hooks/useUserBets';
 import { normaliseFlight } from '@/hooks/useFlights';
@@ -12,14 +13,6 @@ import BetForm from '@/components/BetForm';
 import ActiveBets from '@/components/ActiveBets';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
 import type { Flight } from '@/types';
-
-function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString('en-ZA', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-ZA', {
@@ -73,6 +66,14 @@ export default function FlightBetPage() {
   const arrCode = flight.arrival.airport.code;
   const bettingStatus = computeBettingStatus(flight);
   const canBetNow = bettingStatus === 'Open';
+  const departureDisplay = getFlightLegTimeDisplay(
+    flight.departure.scheduled,
+    bettingStatus === 'Settled' ? flight.departure.actual : null
+  );
+  const arrivalDisplay = getFlightLegTimeDisplay(
+    flight.arrival.scheduled,
+    bettingStatus === 'Settled' ? flight.arrival.actual : null
+  );
 
   return (
     <div className="py-6">
@@ -108,8 +109,13 @@ export default function FlightBetPage() {
             <div className="text-[10px] text-[#64748B]">
               {AIRPORT_NAMES[depCode] || depCode}
             </div>
-            <div className="mt-1 font-mono text-sm text-[#94A3B8]">
-              {formatTime(flight.departure.scheduled)}
+            <div className="mt-1 flex items-center justify-center gap-1 font-mono text-sm">
+              <span className="text-[#94A3B8]">{departureDisplay.timeLabel}</span>
+              {departureDisplay.deltaLabel && (
+                <span className={`font-bold ${departureDisplay.deltaClassName}`}>
+                  {departureDisplay.deltaLabel}
+                </span>
+              )}
             </div>
           </div>
 
@@ -128,8 +134,13 @@ export default function FlightBetPage() {
             <div className="text-[10px] text-[#64748B]">
               {AIRPORT_NAMES[arrCode] || arrCode}
             </div>
-            <div className="mt-1 font-mono text-sm text-[#94A3B8]">
-              {formatTime(flight.arrival.scheduled)}
+            <div className="mt-1 flex items-center justify-center gap-1 font-mono text-sm">
+              <span className="text-[#94A3B8]">{arrivalDisplay.timeLabel}</span>
+              {arrivalDisplay.deltaLabel && (
+                <span className={`font-bold ${arrivalDisplay.deltaClassName}`}>
+                  {arrivalDisplay.deltaLabel}
+                </span>
+              )}
             </div>
           </div>
         </div>

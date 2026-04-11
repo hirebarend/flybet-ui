@@ -4,16 +4,9 @@ import { Card } from '@/components/ui/card';
 import type { Flight } from '@/types';
 import { AIRPORT_NAMES, getFlightNumber } from '@/types';
 import { computeBettingStatus, getBettingStatusStyle } from '@/lib/flight-status';
+import { getFlightLegTimeDisplay } from '@/lib/flight-times';
 import { getBasePool } from '@/lib/utils';
 import type { FlightPool } from '@/hooks/useFlightPools';
-
-function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString('en-ZA', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
 
 interface FlightCardProps {
   flight: Flight;
@@ -25,6 +18,14 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
   const depCode = flight.departure.airport.code;
   const arrCode = flight.arrival.airport.code;
   const bettingStatus = computeBettingStatus(flight);
+  const departureDisplay = getFlightLegTimeDisplay(
+    flight.departure.scheduled,
+    bettingStatus === 'Settled' ? flight.departure.actual : null
+  );
+  const arrivalDisplay = getFlightLegTimeDisplay(
+    flight.arrival.scheduled,
+    bettingStatus === 'Settled' ? flight.arrival.actual : null
+  );
   const { basePool, baseStakers } = getBasePool(flight.id);
   const totalPool = basePool + (pool?.totalPool ?? 0);
   const totalStakers = baseStakers + (pool?.stakerCount ?? 0);
@@ -55,8 +56,13 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
           <div className="text-[10px] text-[#64748B]">
             {AIRPORT_NAMES[depCode] || depCode}
           </div>
-          <div className="mt-1 font-mono text-xs text-[#94A3B8]">
-            {formatTime(flight.departure.scheduled)}
+          <div className="mt-1 flex items-center justify-center gap-1 font-mono text-xs">
+            <span className="text-[#94A3B8]">{departureDisplay.timeLabel}</span>
+            {departureDisplay.deltaLabel && (
+              <span className={`font-bold ${departureDisplay.deltaClassName}`}>
+                {departureDisplay.deltaLabel}
+              </span>
+            )}
           </div>
         </div>
 
@@ -79,8 +85,13 @@ export default function FlightCard({ flight, pool }: FlightCardProps) {
           <div className="text-[10px] text-[#64748B]">
             {AIRPORT_NAMES[arrCode] || arrCode}
           </div>
-          <div className="mt-1 font-mono text-xs text-[#94A3B8]">
-            {formatTime(flight.arrival.scheduled)}
+          <div className="mt-1 flex items-center justify-center gap-1 font-mono text-xs">
+            <span className="text-[#94A3B8]">{arrivalDisplay.timeLabel}</span>
+            {arrivalDisplay.deltaLabel && (
+              <span className={`font-bold ${arrivalDisplay.deltaClassName}`}>
+                {arrivalDisplay.deltaLabel}
+              </span>
+            )}
           </div>
         </div>
       </div>
